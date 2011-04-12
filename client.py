@@ -1,3 +1,24 @@
+#-*- coding:utf8 -*-
+#!/usr/bin/env python
+
+
+########################################################################
+#author:liutaihua
+#email: defage@gmail.com
+#
+#########################################################################
+"""
+Usage:
+    [-h|--help] [-H|--host] [-p|--port] [-f|--file]
+
+-H|--host    the scribe host
+-p|--port    the scribe port
+-f|--file    the log file
+
+example:
+    python client -H 127.0.0.1 -p 1463 -f /tmp/test.log
+"""
+
 import sys
 import time
 import getopt
@@ -7,15 +28,6 @@ from thrift.transport import TTransport, TSocket
 from thrift.protocol import TBinaryProtocol
 
 
-"""
-Usage:
-    [-h|--help] [-H|--host] [-p|--port] [-f|--file]
-
--H|--host    the scribe host
--p|--port    the scribe port
--f|--file    log file
-
-"""
 
 
 #host = '127.0.0.1'
@@ -34,8 +46,11 @@ def getLocalIp():
 
 
 def main(argv):
+    if not argv:
+        usage()
+        sys.exit()
     try:
-        opts, args = getopt.getopt(argv, "h:H:p:f:", ["help", "host=","port=","logfile="])
+        opts, args = getopt.getopt(argv, "hH:p:f:", ["help", "host=","port=","logfile="])
     except getopt.GetoptError,err:
         print err
         usage()
@@ -73,6 +88,8 @@ def main(argv):
 	    log_entry = scribe.LogEntry(category=getLocalIp(), message=line)
 	    result = client.Log(messages=[log_entry])
 	    #transport.close()
+def usage():
+    print __doc__
 
 if __name__ == "__main__":
     main(sys.argv[1:])
