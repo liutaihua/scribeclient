@@ -69,7 +69,7 @@ def main(argv):
             pass
             usage()
             sys.exit()
-    category_name = getLocalIp() + "-" + ''.join([i for i in logfile.split('/')[-2:]])
+    category_name = getLocalIp() + "_" + logfile.split('/')[-2] + "_" + logfile.split('/')[-1]
 
     socket = TSocket.TSocket(host=host, port=port)
     transport = TTransport.TFramedTransport(socket)
