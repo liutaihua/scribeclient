@@ -69,6 +69,7 @@ def main(argv):
             pass
             usage()
             sys.exit()
+    category_name = getLocalIp() + "-" + ''.join([i for i in logfile.split('/')[-2:]])
 
     socket = TSocket.TSocket(host=host, port=port)
     transport = TTransport.TFramedTransport(socket)
@@ -85,7 +86,7 @@ def main(argv):
 	    file.seek(where)
         else:
 	    print line, # already has newline
-	    log_entry = scribe.LogEntry(category=getLocalIp(), message=line)
+	    log_entry = scribe.LogEntry(category=category_name, message=line)
 	    result = client.Log(messages=[log_entry])
 	    #transport.close()
 def usage():
