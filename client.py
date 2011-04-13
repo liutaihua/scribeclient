@@ -39,7 +39,7 @@ from thrift.protocol import TBinaryProtocol
 def getLocalIp():
     from socket import socket, SOCK_DGRAM, AF_INET
     s = socket(AF_INET, SOCK_DGRAM)
-    s.connect(('baidu.com',0))
+    s.connect(('8.8.8.8',0))
     LocalIp = s.getsockname()[0]
     s.close()
     return LocalIp
