@@ -34,11 +34,12 @@ def getLocalIp():
 
 
 class TailThread(threading.Thread):
-    def __init__(self, host, port, handleFile):
+    def __init__(self, handleFile):
         threading.Thread.__init__(self)
         self.host = host
         self.port = port
         self.handleFile= handleFile
+
 
     def run(self):
         category_name = "[" + getLocalIp() +  "]" + "[" + self.handleFile.split('/')[-2] + "]" + "[" + self.handleFile.split('/')[-1] + "]"
@@ -47,7 +48,7 @@ class TailThread(threading.Thread):
         protocol = TBinaryProtocol.TBinaryProtocol(trans=transport, strictRead=False, strictWrite=False)
         client = scribe.Client(iprot=protocol, oprot=protocol)
         file = open(self.handleFile,'r')
-        file.seek(0,2)
+        #file.seek(0,2)
 
         transport.open()
         while True:
@@ -58,36 +59,43 @@ class TailThread(threading.Thread):
                 file.seek(where)
             else:
                 print line, # already has newline
-                syslog.syslog(line)
                 log_entry = scribe.LogEntry(category=category_name, message=line)
                 result = client.Log(messages=[log_entry])
                 #transport.close()
 
 class EventHandler(ProcessEvent):
     def process_IN_CREATE(self, event):
-        print   "Create file: %s "  %   os.path.join(event.path, event.name)
-        thread = TailThread(host, port, handleFile=os.path.join(event.path, event.name))
+        syslog.syslog("Create file: %s "  %   os.path.join(event.path, event.name))
+        thread = TailThread(handleFile=os.path.join(event.path, event.name))
         thread.start()
 
     def process_IN_DELETE(self, event):
         print   "Delete file: %s "  %   os.path.join(event.path, event.name)
     
-    def process_IN_MODIFY(self, event):
-        print   "Modify file: %s "  %   os.path.join(event.path, event.name)
-        thread = TailThread(host, port, handleFile=os.path.join(event.path, event.name))
-        thread.start()
+    #def process_IN_MODIFY(self, event):
+    #    syslog.syslog("Modify file: %s "  %   os.path.join(event.path, event.name))
+    #    thread = TailThread(host, port, handleFile=os.path.join(event.path, event.name))
+    #    thread.start()
     
 
 class MyDaemon(Daemon):
     def run(self):
-        syslog.openlog('scribeClient',syslog.LOG_PID)
         path = '/opt/logs/nginx/'
+        scan = None
+
+        syslog.openlog('scribeClient',syslog.LOG_PID)
         wm = WatchManager() 
         mask = IN_DELETE | IN_CREATE |IN_MODIFY
         notifier = Notifier(wm, EventHandler())
         wm.add_watch(path, mask,rec=True)
         #print 'now starting monitor %s'%(path)
         while True:
+            if not scan:
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        thread = TailThread(os.path.join(root,file))
+                        thread.start()
+                scan = 'complete'
             try:
                 notifier.process_events()
                 if notifier.check_events():

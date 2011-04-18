@@ -759,7 +759,9 @@ class _SysProcessEvent(_ProcessEvent):
                 # parent directory.
                 addw_ret = addw(created_dir, watch_.mask,
                                 proc_fun=watch_.proc_fun,
-                                rec=False, auto_add=watch_.auto_add,
+                                #rec=False, auto_add=watch_.auto_add,
+                                #exclude_filter=watch_.exclude_filter)
+                                rec=False, auto_add=True,
                                 exclude_filter=watch_.exclude_filter)
 
                 # Trick to handle mkdir -p /d1/d2/t3 where d1 is watched and
@@ -1826,7 +1828,8 @@ class WatchManager:
             return [path]
 
     def add_watch(self, path, mask, proc_fun=None, rec=False,
-                  auto_add=False, do_glob=False, quiet=True,
+                  #auto_add=False, do_glob=False, quiet=True,
+                  auto_add=True, do_glob=False, quiet=True,
                   exclude_filter=None):
         """
         Add watch(s) on the provided |path|(s) with associated |mask| flag
@@ -1945,7 +1948,8 @@ class WatchManager:
                     yield iwd[1].wd
 
     def update_watch(self, wd, mask=None, proc_fun=None, rec=False,
-                     auto_add=False, quiet=True):
+                     #auto_add=False, quiet=True):
+                     auto_add=True, quiet=True):
         """
         Update existing watch descriptors |wd|. The |mask| value, the
         processing object |proc_fun|, the recursive param |rec| and the
