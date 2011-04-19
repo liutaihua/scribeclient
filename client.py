@@ -42,7 +42,7 @@ class TailThread(threading.Thread):
 
 
     def run(self):
-        category_name = "[" + getLocalIp() +  "]" + "[" + self.handleFile.split('/')[-2] + "]" + "[" + self.handleFile.split('/')[-1] + "]"
+        category_name = getLocalIp() + "%" + self.handleFile.split('/')[-2] + "%" + self.handleFile.split('/')[-1]
         socket = TSocket.TSocket(host=self.host, port=self.port)
         transport = TTransport.TFramedTransport(socket)
         protocol = TBinaryProtocol.TBinaryProtocol(trans=transport, strictRead=False, strictWrite=False)
@@ -65,7 +65,7 @@ class TailThread(threading.Thread):
 
 class EventHandler(ProcessEvent):
     def process_IN_CREATE(self, event):
-        syslog.syslog("Create file: %s "  %   os.path.join(event.path, event.name))
+        #syslog.syslog("Create file: %s "  %   os.path.join(event.path, event.name))
         thread = TailThread(handleFile=os.path.join(event.path, event.name))
         thread.start()
 
