@@ -1,0 +1,8 @@
+Instructions
+    Use the pyinotify for monit to directory that if directory have some changes.
+    Changes detected after,the daemon will read it ,then establish a connection with the scribe log server,sending log to scribe.
+
+How to?
+    client.py is main program.It run as a daemon.
+    Befor use,edit client.py,modify the keyword:"host","port" for services corresponding to your scribe listen.
+    python client start|stop|restart
