@@ -38,7 +38,6 @@ class TailThread(threading.Thread):
         transport = TTransport.TFramedTransport(socket)
         protocol = TBinaryProtocol.TBinaryProtocol(trans=transport, strictRead=False, strictWrite=False)
         client = scribe.Client(iprot=protocol, oprot=protocol)
-        print self.handleFile
 
         try:
             transport.open()
@@ -46,28 +45,35 @@ class TailThread(threading.Thread):
             syslog.syslog("%s\n"%e)
             sys.exit(2)
 
+        global start
         while True:
             try:
                 file = open(self.handleFile,'r')
             except Exception, e:
                 print e
                 sys.exit(2)
-            file.seek(0,2)
-            if self.w:
-                file.seek(self.w)
-            #else:
-            #    file.seek(0,2)
-            where = file.tell()
-            line = file.readline()
-            if not line:
-                time.sleep(1)
-                file.seek(where)
+
+            if not self.w:
+                file.seek(0,2)
+                start = file.tell()
+                self.w = 'complete'
+                print "start", start
             else:
-                print line, # already has newline
-                log_entry = scribe.LogEntry(category=category_name, message=line)
-                result = client.Log(messages=[log_entry])
-                self.w = file.tell()
-            file.close()
+                file.seek(os.path.getsize(self.handleFile))
+                end = file.tell()
+                if end != start:
+                    curpos = end - start
+                    file.seek(end - curpos)
+                    info_list = file.readlines()
+                    for info in info_list:
+                        print info.split('\n')[0]
+                        log_entry = scribe.LogEntry(category=category_name, message=info)
+                        result = client.Log(messages=[log_entry])
+                    start = end
+                else: pass
+                
+            time.sleep(10)
+
 
 
 for root,dirs, files in os.walk(sys.argv[1]):
