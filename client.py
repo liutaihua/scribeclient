@@ -39,7 +39,7 @@ class TailThread(threading.Thread):
         self.host = host
         self.port = port
         self.handleFile= handleFile
-        self.last_seek = None
+        #self.last_seek = None
 
     def run(self):
         category_name = getLocalIp() + "%" + self.handleFile.split('/')[-2] + "%" + self.handleFile.split('/')[-1]
@@ -60,6 +60,8 @@ class TailThread(threading.Thread):
             except Exception, e:
                 syslog.syslog("%s\n"%e)
                 sys.exit(2)
+
+            file.seek(0,2)
             while True:
                 where = file.tell()
                 line = file.readline().split('\n')[0]
