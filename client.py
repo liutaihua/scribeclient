@@ -55,32 +55,27 @@ class TailThread(threading.Thread):
             sys.exit(2)
 
         if self.handleFile.endswith(logFileFormat):
-            global start
+            try:
+                file = open(self.handleFile,'r')
+            except Exception, e:
+                syslog.syslog("%s\n"%e)
+                sys.exit(2)
             while True:
-                try:
-                    file = open(self.handleFile,'r')
-                except Exception, e:
-                    syslog.syslog("%s\n"%e)
-                    sys.exit(2)
-                if not self.last_seek:
-                    file.seek(0,2)
-                    start = file.tell()
-                    self.last_seek = 'complete'
+                where = file.tell()
+                line = file.readline().split('\n')[0]
+                if not line:
+                    if not os.path.exists(self.handleFile):
+                        sys.exit(2)
+                    else:
+                        time.sleep(1)
+                        file.seek(where)
                 else:
-                    file.seek(os.path.getsize(self.handleFile))
-                    end = file.tell()
-                    if !start = end:
-                        curpos = end - start
-                        file.seek(end - curpos)
-                        info_list = file.readlines()
-                        for info in info_list:
-                            try:
-                                log_entry = scribe.LogEntry(category=category_name, message=info)
-                                result = client.Log(messages=[log_entry])
-                            except Exception, e:
-                                syslog.syslog("disconnect from scribe server,error: %s\n"%e)
-                        start = end
-                    else:pass
+                    try:
+                        log_entry = scribe.LogEntry(category=category_name, message=line)
+                        result = client.Log(messages=[log_entry])
+                        #transport.close()
+                    except Exception, e:
+                        syslog.syslog("disconnect from scribe server,error: %s\n"%e)
         else:
             sys.exit(2)
 
