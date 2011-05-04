@@ -125,7 +125,7 @@ class MyDaemon(Daemon):
                 break
 
 if __name__ == "__main__":
-	daemon = MyDaemon('/tmp/daemon.pid')
+	daemon = MyDaemon('/tmp/scribeclient.pid')
 	if len(sys.argv) == 2:
 		if 'start' == sys.argv[1]:
 				daemon.start()
