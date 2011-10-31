@@ -65,6 +65,7 @@ class TailThread(threading.Thread):
             else:
                 print line, # already has newline
                 log_entry = scribe.LogEntry(category=category_name, message=line)
+                print "fuck is: ", log_entry
                 result = client.Log(messages=[log_entry])
                 self.w = file.tell()
             file.close()

@@ -1,5 +1,5 @@
-#!/usr/bin/env python
 #-*- coding:utf8 -*-
+#!/usr/bin/env python
 ########################################################################
 #author:liutaihua
 #email: defage@gmail.com
@@ -21,9 +21,10 @@ from thrift.protocol import TBinaryProtocol
 
 
 
-host = '10.241.12.74'
+host = '10.127.26.241'
 port = 1463
 logFileFormat = '.log'
+domain = ['reg','www','cas','reguser','login']
 
 def getLocalIp():
     from socket import socket, SOCK_DGRAM, AF_INET
@@ -42,7 +43,7 @@ class TailThread(threading.Thread):
         #self.last_seek = None
 
     def run(self):
-        category_name = getLocalIp() + "%" + self.handleFile.split('/')[-2] + "%" + self.handleFile.split('/')[-1]
+        category_name = getLocalIp() + "%" + self.handleFile.split('/')[-2]
         socket = TSocket.TSocket(host=self.host, port=self.port)
         transport = TTransport.TFramedTransport(socket)
         protocol = TBinaryProtocol.TBinaryProtocol(trans=transport, strictRead=False, strictWrite=False)
@@ -113,8 +114,9 @@ class MyDaemon(Daemon):
             if not scan:
                 for root, dirs, files in os.walk(path):
                     for file in files:
-                        thread = TailThread(os.path.join(root,file))
-                        thread.start()
+                        if os.path.join(root,file).split('/')[-2] in domain:
+                            thread = TailThread(os.path.join(root,file))
+                            thread.start()
                 scan = 'complete'
             try:
                 notifier.process_events()
@@ -125,7 +127,7 @@ class MyDaemon(Daemon):
                 break
 
 if __name__ == "__main__":
-	daemon = MyDaemon('/tmp/scribeclient.pid')
+	daemon = MyDaemon('/var/run/scribeclient.pid')
 	if len(sys.argv) == 2:
 		if 'start' == sys.argv[1]:
 				daemon.start()

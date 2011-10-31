@@ -15,7 +15,7 @@ from thrift.protocol import TBinaryProtocol
 
 host = '10.241.12.74'
 port = 1463
-
+logFileFormat = '.log'
 def getLocalIp():
     from socket import socket, SOCK_DGRAM, AF_INET
     s = socket(AF_INET, SOCK_DGRAM)
@@ -39,41 +39,40 @@ class TailThread(threading.Thread):
         protocol = TBinaryProtocol.TBinaryProtocol(trans=transport, strictRead=False, strictWrite=False)
         client = scribe.Client(iprot=protocol, oprot=protocol)
 
+
         try:
             transport.open()
         except Exception, e:
             syslog.syslog("%s\n"%e)
             sys.exit(2)
 
-        global start
-        while True:
+        if self.handleFile.endswith(logFileFormat):
             try:
                 file = open(self.handleFile,'r')
             except Exception, e:
-                print e
+                syslog.syslog("%s\n"%e)
                 sys.exit(2)
 
-            if not self.w:
-                file.seek(0,2)
-                start = file.tell()
-                self.w = 'complete'
-                print "start", start
-            else:
-                file.seek(os.path.getsize(self.handleFile))
-                end = file.tell()
-                if end != start:
-                    curpos = end - start
-                    file.seek(end - curpos)
-                    info_list = file.readlines()
-                    for info in info_list:
-                        print info.split('\n')[0]
-                        log_entry = scribe.LogEntry(category=category_name, message=info)
+            file.seek(0,2)
+            while True:
+                where = file.tell()
+                line = file.readline().split('\n')[0]
+                if not line:
+                    if not os.path.exists(self.handleFile):
+                        sys.exit(2)
+                    else:
+                        time.sleep(1)
+                        file.seek(where)
+                else:
+                    try:
+                        log_entry = scribe.LogEntry(category=category_name, message=line)
+                        print "fuck is : ", log_entry
                         result = client.Log(messages=[log_entry])
-                    start = end
-                else: pass
-                
-            time.sleep(10)
-
+                        #transport.close()
+                    except Exception, e:
+                        syslog.syslog("disconnect from scribe server,error: %s\n"%e)
+        else:
+            sys.exit(2)
 
 
 for root,dirs, files in os.walk(sys.argv[1]):
