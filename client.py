@@ -24,7 +24,8 @@ from thrift.protocol import TBinaryProtocol
 host = '10.127.26.241'
 port = 1463
 logFileFormat = '.log'
-domain = ['reg','www','cas','reguser','login']
+#domain = ['reg','www','cas','reguser','login']
+domain = []
 
 def getLocalIp():
     from socket import socket, SOCK_DGRAM, AF_INET
@@ -114,7 +115,11 @@ class MyDaemon(Daemon):
             if not scan:
                 for root, dirs, files in os.walk(path):
                     for file in files:
-                        if os.path.join(root,file).split('/')[-2] in domain:
+                        if domain:
+                            if os.path.join(root,file).split('/')[-2] in domain:
+                                thread = TailThread(os.path.join(root,file))
+                                thread.start()
+                        else:
                             thread = TailThread(os.path.join(root,file))
                             thread.start()
                 scan = 'complete'
