@@ -119,7 +119,7 @@ class MyDaemon(Daemon):
                             if os.path.join(root,file).split('/')[-2] in domain:
                                 thread = TailThread(os.path.join(root,file))
                                 thread.start()
-                        else:
+                        elif os.path.join(root,file).split('/')[-2] != "nginx":
                             thread = TailThread(os.path.join(root,file))
                             thread.start()
                 scan = 'complete'
