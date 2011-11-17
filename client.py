@@ -103,13 +103,14 @@ class EventHandler(ProcessEvent):
 class MyDaemon(Daemon):
     def run(self):
         path = '/opt/logs/nginx/'
+        watch_path = map(lambda x:os.path.join(path, x),filter(lambda x:x!="nginx", [i for i in os.listdir(path)]))
         scan = None
         syslog.openlog('scribeClient',syslog.LOG_PID)
 
         wm = WatchManager() 
         mask = IN_DELETE | IN_CREATE |IN_MODIFY
         notifier = Notifier(wm, EventHandler())
-        wm.add_watch(path, mask,rec=True)
+        wm.add_watch(watch_path, mask,rec=True)
         #print 'now starting monitor %s'%(path)
         while True:
             if not scan:
