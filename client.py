@@ -64,7 +64,6 @@ class TailThread(threading.Thread):
                 sys.exit(2)
 
             file.seek(0,2)
-            time_count = 0
             while True:
                 where = file.tell()
                 line = file.readline().split('\n')[0]
@@ -74,9 +73,6 @@ class TailThread(threading.Thread):
                     else:
                         time.sleep(1)
                         file.seek(where)
-                        time_count += 1
-                        if time_count > 3600:
-                            sys.exit(0)
                 else:
                     try:
                         log_entry = scribe.LogEntry(category=category_name, message=line)
