@@ -80,6 +80,12 @@ class TailThread(threading.Thread):
                         #transport.close()
                     except Exception, e:
                         syslog.syslog("disconnect from scribe server,error: %s\n"%e)
+                        while True:
+                            try:
+                                result = client.Log(messages=[log_entry])
+                            except Exception, e:
+                                syslog.syslog("can't conn scribe server.")
+                                time.sleep(600)
         else:
             sys.exit(2)
 
@@ -124,6 +130,13 @@ class MyDaemon(Daemon):
                             thread = TailThread(os.path.join(root,file))
                             thread.start()
                 scan = 'complete'
+            elif time.localtime().tm_hour == 0:
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        f = open(os.path.join(root, file), 'w')
+                        f.flush()
+                        time.sleep(1)
+                        f.close()
             try:
                 notifier.process_events()
                 if notifier.check_events():
