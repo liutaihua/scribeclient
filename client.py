@@ -126,17 +126,10 @@ class MyDaemon(Daemon):
                             if os.path.join(root,file).split('/')[-2] in domain:
                                 thread = TailThread(os.path.join(root,file))
                                 thread.start()
-                        elif os.path.join(root,file).split('/')[-2] != "nginx":
+                        elif os.path.join(root,file).split('/')[4] not in ["nginx", "archive"]:
                             thread = TailThread(os.path.join(root,file))
                             thread.start()
                 scan = 'complete'
-            elif time.localtime().tm_hour == 0:
-                for root, dirs, files in os.walk(path):
-                    for file in files:
-                        f = open(os.path.join(root, file), 'w')
-                        f.flush()
-                        time.sleep(1)
-                        f.close()
             try:
                 notifier.process_events()
                 if notifier.check_events():
