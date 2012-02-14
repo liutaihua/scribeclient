@@ -26,7 +26,6 @@ port = 1463
 logFileFormat = '.log'
 #domain = ['reg','www','cas','reguser','login']
 domain = []
-global global_seek
 
 def getLocalIp():
     from socket import socket, SOCK_DGRAM, AF_INET
@@ -45,7 +44,6 @@ class TailThread(threading.Thread):
         #self.last_seek = None
 
     def run(self):
-        global global_seek
         category_name = getLocalIp() + "%" + self.handleFile.split('/')[-2]
         socket = TSocket.TSocket(host=self.host, port=self.port)
         transport = TTransport.TFramedTransport(socket)
@@ -81,15 +79,16 @@ class TailThread(threading.Thread):
                         result = client.Log(messages=[log_entry])
                         #transport.close()
                     except Exception, e:
-                        global_seek = where
                         syslog.syslog("disconnect from scribe server,error: %s\n"%e)
                         while True:
                             try:
+                                transport.open()
                                 result = client.Log(messages=[log_entry])
                             except Exception, e:
-                                syslog.syslog("can't conn scribe server.")
+                                syslog.syslog("can't conn scribe server: %s"%e)
                                 time.sleep(60)
-                        file.seek(global_seek)
+                            else:break
+                        file.seek(where)
         else:
             sys.exit(2)
 
