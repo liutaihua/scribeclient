@@ -50,12 +50,15 @@ class TailThread(threading.Thread):
         protocol = TBinaryProtocol.TBinaryProtocol(trans=transport, strictRead=False, strictWrite=False)
         client = scribe.Client(iprot=protocol, oprot=protocol)
 
-        try:
-            transport.open()
-        except Exception, e:
-            syslog.syslog("%s\n"%e)
-            sys.exit(2)
-
+        while True:
+            try:
+                transport.open()
+            except Exception, e:
+                print e
+                syslog.syslog("%s\n"%e)
+                time.sleep(10)
+            else:break
+    
         if self.handleFile.endswith(logFileFormat):
             try:
                 file = open(self.handleFile,'r')
@@ -76,15 +79,23 @@ class TailThread(threading.Thread):
                         max_wait += 1
                         file.seek(where)
                         if max_wait >= 10:
+                            new_md5 = commands.getoutput("md5sum %s"%self.handleFile).split()[0]
                             try:
                                 file.close()
                                 file = open(self.handleFile)
                             except Exception, e:
-                                syslog.syslog("file have to flushed, reopen it, %s"%e)
+                                syslog.syslog("file have to flushed, reopen it: %s"%e)
                             else:
-                                file.seek(0,2)
+                                try:
+                                    t = old_md5
+                                except Exception,e:
+                                    file.seek(0,2)
+                                else:
+                                    if new_md5 == old_md5:
+                                        file.seek(0,2)
                                 max_wait = 0
                 else:
+                    old_md5 = commands.getoutput("md5sum %s"%self.handleFile).split()[0]
                     max_wait = 0
                     try:
                         log_entry = scribe.LogEntry(category=category_name, message=line)
