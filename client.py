@@ -64,6 +64,7 @@ class TailThread(threading.Thread):
                 sys.exit(2)
 
             file.seek(0,2)
+            max_wait = 0
             while True:
                 where = file.tell()
                 line = file.readline().split('\n')[0]
@@ -72,8 +73,19 @@ class TailThread(threading.Thread):
                         sys.exit(2)
                     else:
                         time.sleep(1)
+                        max_wait += 1
                         file.seek(where)
+                        if max_wait >= 10:
+                            try:
+                                file.close()
+                                file = open(self.handleFile)
+                            except Exception, e:
+                                syslog.syslog("file have to flushed, reopen it, %s"%e)
+                            else:
+                                file.seek(0,2)
+                                max_wait = 0
                 else:
+                    max_wait = 0
                     try:
                         log_entry = scribe.LogEntry(category=category_name, message=line)
                         result = client.Log(messages=[log_entry])
@@ -83,11 +95,12 @@ class TailThread(threading.Thread):
                         while True:
                             try:
                                 transport.open()
+                                log_entry = scribe.LogEntry(category=category_name, message=line)
                                 result = client.Log(messages=[log_entry])
                             except Exception, e:
-                                syslog.syslog("can't conn scribe server: %s"%e)
-                                time.sleep(60)
-                            else:break
+                                syslog.syslog("can't conn scribe server.")
+                                time.sleep(3)
+                            else: break
                         file.seek(where)
         else:
             sys.exit(2)
